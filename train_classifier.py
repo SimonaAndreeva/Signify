@@ -1,39 +1,28 @@
-import os
 import pickle
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 import numpy as np
 
-print("Start of the script")
 
-# Debug print to check if this part of the script is reached
-print("Attempting to open data.pickle file")
+data_dict = pickle.load(open('./data.pickle', 'rb'))
 
-# Check if the file exists
-if os.path.exists('./data.pickle'):
-    print("File exists")
-else:
-    print("File does not exist")
-    exit()
+data = np.asarray(data_dict['data'])
+labels = np.asarray(data_dict['labels'])
 
-# Debug print to check if this part of the script is reached
-print("Attempting to load data from data.pickle")
+x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, shuffle=True, stratify=labels)
 
-# Load data from pickle file
-with open('./data.pickle', 'rb') as f:
-    try:
-        data_dict = pickle.load(f)
-        print("Data loaded successfully")
-    except Exception as e:
-        print(f"Error loading data: {e}")
-        exit()
+model = RandomForestClassifier()
 
-# Debug print to check if this part of the script is reached
-print("Attempting to print data_dict keys")
+model.fit(x_train, y_train)
 
-# Print keys of data_dict
-print("Keys in data_dict:", data_dict.keys())
+y_predict = model.predict(x_test)
 
-# Print shape of data array and a few sample labels
-print("Shape of data array:", data_dict['data'].shape)
-print("Sample labels:", data_dict['labels'][:10])
+score = accuracy_score(y_predict, y_test)
 
-print("End of the script")
+print('{}% of samples were classified correctly !'.format(score * 100))
+
+f = open('model.p', 'wb')
+pickle.dump({'model': model}, f)
+f.close()

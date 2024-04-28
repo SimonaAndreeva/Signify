@@ -59,6 +59,9 @@ for dir_ in os.listdir(DATA_DIR):
                             data_aux.append(x - min(x_))
                             data_aux.append(y - min(y_))
 
+                    while len(data_aux) < 42:
+                        data_aux.append(0)  # Pad with zeros if less than 42 features
+
                     batch_data.append(data_aux)
                     batch_labels.append(dir_)
 
