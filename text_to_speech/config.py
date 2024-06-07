@@ -1,0 +1,6 @@
+API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiM2ExMzNiODMtZGJlZi00N2M5LTliMmYtYThkYjM3OWNmYzg1IiwidHlwZSI6ImFwaV90b2tlbiJ9.tj-RUU1wAXBOh2wIyXnrvNv5VwtUP2WQrpxBmA7Kn9Y"
+URL = "https://api.edenai.run/v2/audio/text_to_speech"
+PROVIDERS = "elevenlabs"
+LANGUAGE = "en-US"
+OPTION = "FEMALE"
+FALLBACK_PROVIDERS = "amazon"
