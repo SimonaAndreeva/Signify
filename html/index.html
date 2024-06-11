@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera and TTS</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <h1>ASL Translator</h1>
+    <h3 id="mostAppearedLetter">Most appeared letter: </h3>
+    <div id="cameraBox">
+        <div id="placeholder" class="placeholder">No video feed available</div>
+        <iframe id="videoFeed" class="video-feed" style="display: none;"></iframe>
+    </div>
+    <div id="buttonBox">
+        <button id="startCamera">Start Camera</button>
+        <button id="stopCamera">Stop Camera</button>
+    </div>
+    <!--<div id="textOutputBox">Most logged text will appear here.</div>-->
+    <div id="groqResponse"></div>
+    <audio id="audioPlayer" controls style="display: none;"></audio>
+    <script>
+        function playAudio(audioData) {
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.src = 'data:audio/wav;base64,' + audioData;
+            audioPlayer.style.display = 'block';
+            audioPlayer.play();
+        }
+
+        function processTextWithGroq(text) {
+            return fetch('http://127.0.0.1:5000/api/process_text', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.processed_text) {
+                    return data.processed_text;
+                } else {
+                    throw new Error('Failed to process text with Groq');
+                }
+            })
+            .catch(error => {
+                console.error('Error processing text with Groq:', error);
+            });
+        }
+
+        function textToSpeech(text) {
+            fetch('http://127.0.0.1:5000/api/text_to_speech', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.elevenlabs && data.elevenlabs.audio) {
+                    playAudio(data.elevenlabs.audio);
+                } else {
+                    console.error('Failed to get audio data:', data);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        document.getElementById('startCamera').addEventListener('click', function() {
+            fetch('http://127.0.0.1:5000/api/start', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'Camera started') {
+                        document.getElementById('placeholder').style.display = 'none';
+                        document.getElementById('videoFeed').style.display = 'block';
+                        document.getElementById('videoFeed').src = 'http://127.0.0.1:5000/video_feed';
+                    }
+                })
+                .catch(error => console.error('Error starting camera:', error));
+        });
+
+        document.getElementById('stopCamera').addEventListener('click', function() {
+            fetch('http://127.0.0.1:5000/api/stop', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'Camera stopped') {
+                        document.getElementById('videoFeed').src = '';
+                        document.getElementById('videoFeed').style.display = 'none';
+                        const letters = data.letters;
+                        if (letters && letters.length > 0) {
+                            const text = letters.join(' ');
+                            processTextWithGroq(text).then(processedText => {
+                                if (processedText) {
+                                    textToSpeech(processedText);
+                                }
+                            });
+                        } else {
+                            console.error('No letters detected');
+                        }
+                    }
+                })
+                .catch(error => console.error('Error stopping camera:', error));
+        });
+    </script>
+</body>
+</html>
