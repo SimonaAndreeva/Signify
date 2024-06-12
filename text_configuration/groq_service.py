@@ -14,7 +14,7 @@ class GroqService:
             messages=[
                 {
                     "role": "system",
-                    "content": "Return 'JSON'"
+                    "content": "Return 'JSON'"           
                 },
                 {
                     "role": "user",

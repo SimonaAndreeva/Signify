@@ -1,4 +1,3 @@
-# camera_app.py
 import pickle
 import cv2
 import mediapipe as mp
@@ -6,6 +5,7 @@ import numpy as np
 import time
 from collections import Counter
 from threading import Thread
+from flask_socketio import SocketIO
 
 # Load the model
 model_dict = pickle.load(open('./data_training/model.p', 'rb'))
@@ -18,6 +18,9 @@ mp_drawing_styles = mp.solutions.drawing_styles
 hands = mp_hands.Hands(static_image_mode=True, min_detection_confidence=0.3)
 
 labels_dict = {i: chr(65 + i) for i in range(26)}  # Dictionary mapping numbers to letters
+
+# Initialize SocketIO
+socketio = SocketIO()
 
 class CameraApp:
     def __init__(self):
@@ -49,9 +52,6 @@ class CameraApp:
 
     def get_detected_letters(self):
         return self.letters_array
-
-
-    
 
     def _run(self):
         while self.running:
@@ -111,6 +111,9 @@ class CameraApp:
                         self.letters_array.append(most_common_letter)
                         self.shown_letters.clear()
                         self.start_time = time.time()
+
+                        # Emit event to update most common letter
+                        socketio.emit('update_letter', {'letter': most_common_letter})
 
                     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 0), 4)
                     cv2.putText(frame, predicted_character, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 0), 3, cv2.LINE_AA)

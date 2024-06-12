@@ -1,8 +1,7 @@
-# app.py
 import logging
 from flask import Flask, jsonify, Response, request
 from flask_cors import CORS
-from data_training.interface_classifier import CameraApp
+from data_training.interface_classifier import CameraApp, socketio
 from text_to_speech.text_to_speech_service import TextToSpeechService
 from text_to_speech.authenticator import Authenticator
 from text_to_speech.audio_handler import AudioHandler
@@ -18,6 +17,9 @@ audio_handler = AudioHandler()
 
 camera_app = CameraApp()
 groq_service = GroqService()
+
+# Initialize SocketIO with Flask app
+socketio.init_app(app, cors_allowed_origins="*")
 
 @app.route('/api/start', methods=['POST'])
 def start_camera():
@@ -78,4 +80,5 @@ def text_to_speech():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    app.run(debug=True)
+    # Run Flask app with SocketIO
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
