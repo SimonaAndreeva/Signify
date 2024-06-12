@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Camera and TTS</title>
     <link rel="stylesheet" href="main.css">
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 </head>
 <body>
     <h1>ASL Translator</h1>
-    <h3 id="mostAppearedLetter">Most appeared letter: </h3>
+    <div class="block">
+        <div id="lightChangedLetter"></div>
+        <h3 id="mostAppearedLetter">Most appeared letter: </h3>
+    </div>
     <div id="cameraBox">
         <div id="placeholder" class="placeholder">No video feed available</div>
         <iframe id="videoFeed" class="video-feed" style="display: none;"></iframe>
@@ -17,9 +21,10 @@
         <button id="startCamera">Start Camera</button>
         <button id="stopCamera">Stop Camera</button>
     </div>
-    <!--<div id="textOutputBox">Most logged text will appear here.</div>-->
-    <div id="groqResponse"></div>
-    <audio id="audioPlayer" controls style="display: none;"></audio>
+    <div class="block">
+        <div id="groqResponse"></div>
+        <audio id="audioPlayer" controls style="display: none;"></audio>
+    </div>
     <script>
         function playAudio(audioData) {
             const audioPlayer = document.getElementById('audioPlayer');
@@ -88,6 +93,7 @@
                         if (letters && letters.length > 0) {
                             const text = letters.join(' ');
                             processTextWithGroq(text).then(processedText => {
+                                document.getElementById('groqResponse').textContent = processedText;
                                 if (processedText) {
                                     textToSpeech(processedText);
                                 }
@@ -98,6 +104,20 @@
                     }
                 })
                 .catch(error => console.error('Error stopping camera:', error));
+        });
+
+        // Connect to the WebSocket server running on port 5000
+        const socket = io('http://127.0.0.1:5000');
+
+        // Listen for the 'update_letter' event
+        socket.on('update_letter', function(data) {
+            const mostAppearedLetterElement = document.getElementById('mostAppearedLetter');
+            const lightChangedLetter = document.getElementById('lightChangedLetter');
+            mostAppearedLetterElement.textContent = `Most appeared letter: ${data.letter}`;
+            lightChangedLetter.classList.add('shine-green');
+            setTimeout(() => {
+                lightChangedLetter.classList.remove('shine-green');
+            }, 500);
         });
     </script>
 </body>
